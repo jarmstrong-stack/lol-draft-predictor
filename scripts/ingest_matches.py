@@ -45,7 +45,7 @@ def main(max_per_summoner=20):
         for e in entries:
              # make sure it's a dict and the key exists
             if not isinstance(e, dict):
-            continue
+                continue
             summ_id = e.get("summonerId")
             if not summ_id:
                 # log what we do have so we can debug, then skip
