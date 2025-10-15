@@ -1,5 +1,18 @@
 # config.py
 import os
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
+
+RIOT_API_KEY = os.getenv("RIOT_API_KEY")
+
+# rest of your config below
+REGIONS = {
+    "na": {"platform": "na1", "match_routing": "AMERICAS"},
+    "euw": {"platform": "euw1", "match_routing": "EUROPE"},
+    "kr": {"platform": "kr", "match_routing": "ASIA"},
+}
 
 # Riot API
 RIOT_API_KEY = os.getenv("RIOT_API_KEY", "RGAPI-REPLACE_WITH_YOUR_KEY")
