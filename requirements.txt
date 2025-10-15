@@ -1,5 +1,11 @@
-# Add your Python dependencies here
+requests
 pandas
 numpy
-requests
 scikit-learn
+joblib
+tqdm
+torch
+torchvision
+torchtext
+python-dotenv
+riotwatcher==4.4.0
