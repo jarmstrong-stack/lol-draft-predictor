@@ -6,7 +6,7 @@ with open(CHAMP_INDEX_PATH, "r", encoding="utf8") as f:
     CHAMP_TO_IDX = json.load(f)
 NUM_CHAMPS = len(CHAMP_TO_IDX)
 
-def predict_rf(blue_champs, red_champs, model=None):
+def predict_rf(blue_champs, red_champs, model_path=None):
     if model is None:
         model = joblib.load(f"{MODEL_DIR}/rf_base.joblib")
     v = champs_to_signed_vector(blue_champs, red_champs).reshape(1,-1)
