@@ -1,82 +1,89 @@
-# scripts/ingest_matches.py
-import time, json, os
-from riotwatcher import LolWatcher, ApiError
-from config import RIOT_API_KEY, REGIONS, RAW_DIR
+import os
+import time
+import json
 from tqdm import tqdm
+from riotwatcher import LolWatcher, ApiError
+from dotenv import load_dotenv
 
+# --- Load config and constants ---
+load_dotenv()
+RIOT_API_KEY = os.getenv("RIOT_API_KEY")
+REGIONS = ["na1", "euw1", "kr"]
+RAW_DIR = os.path.join("data", "raw")
+os.makedirs(RAW_DIR, exist_ok=True)
+
+# --- Setup watcher ---
 watcher = LolWatcher(RIOT_API_KEY)
 
-# queues
-QUEUE = "RANKED_SOLO_5x5"
-
-def get_league_entries(platform):
-    # get challenger + grandmaster entries
-    res = []
-    try:
-        ch = watcher.league.challenger_by_queue(platform, QUEUE)
-        res += ch.get("entries", [])
-    except ApiError as e:
-        print("Challenger fetch error", e)
-    try:
-        gm = watcher.league.grandmaster_by_queue(platform, QUEUE)
-        res += gm.get("entries", [])
-    except ApiError as e:
-        print("Grandmaster fetch error", e)
-    return res
-
-def safe_fetch(fn, *args, retries=5, wait=1, **kwargs):
-    for i in range(retries):
+# --- Helper to safely call API endpoints ---
+def safe_fetch(func, *args, retries=3, **kwargs):
+    for _ in range(retries):
         try:
-            return fn(*args, **kwargs)
-        except ApiError as e:
-            print("API error", e)
-            time.sleep(wait * (i+1))
-    raise RuntimeError("Max retries exceeded")
+            return func(*args, **kwargs)
+        except ApiError as err:
+            if err.response.status_code == 429:
+                print("Rate limited, sleeping 120s...")
+                time.sleep(120)
+            elif err.response.status_code in [500, 502, 503, 504]:
+                print("Server error, retrying...")
+                time.sleep(10)
+            else:
+                print(f"API error: {err}")
+                return None
+        except Exception as ex:
+            print(f"Error: {ex}")
+            return None
+    return None
 
-def main(max_per_summoner=20):
-    seen_matches = set()
-    for region_key, region_cfg in REGIONS.items():
-        platform = region_cfg["platform"]
-        match_routing = region_cfg["match_routing"]
-        print("Processing region", region_key)
-        entries = get_league_entries(platform)
-        # dedupe summoners by puuid
+# --- Fetch Challenger + Grandmaster League entries ---
+def get_league_entries(region):
+    leagues = []
+    for tier in ["challengerleagues", "grandmasterleagues"]:
+        url_func = getattr(watcher.league, f"{tier}_by_queue")
+        data = safe_fetch(url_func, region, "RANKED_SOLO_5x5")
+        if data and "entries" in data:
+            leagues.extend(data["entries"])
+        else:
+            print(f"⚠️ No data for {region} {tier}")
+    return leagues
+
+# --- Fetch matches for each puuid ---
+def get_matches(region, puuid_list, max_per_summoner=10):
+    all_matches = []
+    for puuid in tqdm(puuid_list, desc=f"{region} matches"):
+        matches = safe_fetch(
+            watcher.match.matchlist_by_puuid, region, puuid, count=max_per_summoner
+        )
+        if not matches:
+            continue
+        for match_id in matches:
+            match = safe_fetch(watcher.match.by_id, region, match_id)
+            if match:
+                all_matches.append(match)
+                # Save incrementally
+                out_path = os.path.join(RAW_DIR, f"{region}_{match_id}.json")
+                with open(out_path, "w", encoding="utf-8") as f:
+                    json.dump(match, f)
+    return all_matches
+
+# --- MAIN ---
+def main(max_per_summoner=10):
+    print("Starting ingestion...")
+    for region in REGIONS:
+        print(f"Processing region {region}")
+        entries = get_league_entries(region)
         puuids = []
+
         for e in entries:
-             # make sure it's a dict and the key exists
-            if not isinstance(e, dict):
-                continue
-            summ_id = e.get("summonerId")
-            if not summ_id:
-                # log what we do have so we can debug, then skip
-                print("entry missing summonerId; keys=", list(e.keys()))
-                continue
-            try:
-                summ = safe_fetch(watcher.summoner.by_id, platform, summ_id)
-                if summ and "puuid" in summ:
-                    puuids.append(summ["puuid"])
-            except Exception as ex:
-                print("summoner error", ex)
-        for puuid in tqdm(puuids):
-            try:
-                ids = safe_fetch(watcher.match.matchlist_by_puuid, match_routing, puuid, start=0, count=max_per_summoner)
-                for mid in ids:
-                    if mid in seen_matches:
-                        continue
-                    seen_matches.add(mid)
-                    # fetch match details
-                    try:
-                        m = safe_fetch(watcher.match.by_id, match_routing, mid)
-                        # save
-                        fname = os.path.join(RAW_DIR, f"{region_key}_{mid}.json")
-                        with open(fname, "w", encoding="utf8") as f:
-                            json.dump(m, f)
-                    except Exception as ex:
-                        print("match fetch error", ex)
-                time.sleep(1.2)  # crude rate control
-            except Exception as ex:
-                print("matchlist fetch error", ex)
+            # Riot API returns puuid directly in new versions
+            if isinstance(e, dict) and e.get("puuid"):
+                puuids.append(e["puuid"])
+            else:
+                print("entry missing puuid; keys=", list(e.keys()) if isinstance(e, dict) else type(e))
+
+        puuids = list(set(puuids))  # deduplicate
+        print(f"Collected {len(puuids)} unique PUUIDs from {region}")
+        _ = get_matches(region, puuids, max_per_summoner=max_per_summoner)
 
 if __name__ == "__main__":
-    main()
-
+    main(max_per_summoner=5)
