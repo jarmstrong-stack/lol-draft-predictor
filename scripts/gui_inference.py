@@ -13,7 +13,7 @@ sys.path.append(str(Path(__file__).resolve().parents[1]))
 from src.inference import predict_rf
 
 ROOT = Path(__file__).resolve().parents[1]
-CHAMP_INDEX = ROOT / "data" / "processed" / "champion_index.json"
+CHAMP_INDEX = ROOT / "data" / "processed" / "champ_index.json"
 MODEL_WORLD = ROOT / "models" / "rf_ensemble_world.joblib"
 MODEL_BASE = ROOT / "models" / "rf_base.joblib"
 
