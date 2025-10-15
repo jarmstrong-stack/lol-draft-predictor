@@ -2,7 +2,7 @@
 import joblib, os
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import KFold
-from preprocess import load_worlds_data, load_base_data
+from src.preprocess import load_worlds_data, load_base_data
 from config import MODEL_DIR
 
 def fine_tune_rf():
