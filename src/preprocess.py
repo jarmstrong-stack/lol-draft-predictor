@@ -1,7 +1,7 @@
 # src/preprocess.py
 import pandas as pd
 import numpy as np
-from utils import champs_to_signed_vector, parse_champion_list
+from src.utils import champs_to_signed_vector, parse_champion_list
 from config import BASE_CSV, WORLDS_CSV
 import joblib
 
