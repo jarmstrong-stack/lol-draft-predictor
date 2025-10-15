@@ -2,7 +2,6 @@
 import joblib, torch, json, numpy as np
 from config import MODEL_DIR, CHAMP_INDEX_PATH
 from src.utils import champs_to_signed_vector, parse_champion_list
-from train_embed import CompEmbedNet
 with open(CHAMP_INDEX_PATH, "r", encoding="utf8") as f:
     CHAMP_TO_IDX = json.load(f)
 NUM_CHAMPS = len(CHAMP_TO_IDX)
