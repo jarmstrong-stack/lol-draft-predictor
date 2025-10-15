@@ -43,12 +43,20 @@ def main(max_per_summoner=20):
         # dedupe summoners by puuid
         puuids = []
         for e in entries:
+             # make sure it's a dict and the key exists
+            if not isinstance(e, dict):
+            continue
+            summ_id = e.get("summonerId")
+            if not summ_id:
+                # log what we do have so we can debug, then skip
+                print("entry missing summonerId; keys=", list(e.keys()))
+                continue
             try:
-                summ = safe_fetch(watcher.summoner.by_id, platform, e["summonerId"])
+                summ = safe_fetch(watcher.summoner.by_id, platform, summ_id)
                 if summ and "puuid" in summ:
                     puuids.append(summ["puuid"])
             except Exception as ex:
-                print("summoner error", ex)
+            print("summoner error", ex)
         for puuid in tqdm(puuids):
             try:
                 ids = safe_fetch(watcher.match.matchlist_by_puuid, match_routing, puuid, start=0, count=max_per_summoner)
