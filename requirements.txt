@@ -8,4 +8,4 @@ torch
 torchvision
 torchtext
 python-dotenv
-riotwatcher==4.4.0
+riotwatcher==3.3.1
