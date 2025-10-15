@@ -56,7 +56,7 @@ def main(max_per_summoner=20):
                 if summ and "puuid" in summ:
                     puuids.append(summ["puuid"])
             except Exception as ex:
-            print("summoner error", ex)
+                print("summoner error", ex)
         for puuid in tqdm(puuids):
             try:
                 ids = safe_fetch(watcher.match.matchlist_by_puuid, match_routing, puuid, start=0, count=max_per_summoner)
