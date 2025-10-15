@@ -1,4 +1,5 @@
 # scripts/fetch_worlds_from_leaguepedia.py
+import os
 import csv
 import json
 import time
