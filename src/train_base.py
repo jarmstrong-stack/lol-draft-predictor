@@ -2,7 +2,7 @@
 import joblib, os
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import train_test_split, cross_val_score
-from preprocess import load_base_data
+from src.preprocess import load_base_data
 from config import MODEL_DIR
 
 def train_rf():
