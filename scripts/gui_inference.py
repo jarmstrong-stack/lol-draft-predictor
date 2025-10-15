@@ -6,6 +6,10 @@ from pathlib import Path
 import streamlit as st
 
 # project imports
+import sys, os
+from pathlib import Path
+sys.path.append(str(Path(__file__).resolve().parents[1]))
+
 from src.inference import predict_rf
 
 ROOT = Path(__file__).resolve().parents[1]
