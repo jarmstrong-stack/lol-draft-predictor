@@ -87,7 +87,7 @@ def main():
         blue = g.loc[side_mask("blue"), "champion"].dropna().tolist()
         red  = g.loc[side_mask("red"),  "champion"].dropna().tolist()
 
-        if args.require-5 and (len(blue) != 5 or len(red) != 5):
+        if args.require_5 and (len(blue) != 5 or len(red) != 5):
             continue
 
         # winner: take unique result for Blue side
