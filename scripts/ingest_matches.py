@@ -45,7 +45,8 @@ def main(max_per_summoner=20):
         for e in entries:
             try:
                 summ = safe_fetch(watcher.summoner.by_id, platform, e["summonerId"])
-                puuids.append(summ["puuid"])
+                if summ and "puuid" in summ:
+                    puuids.append(summ["puuid"])
             except Exception as ex:
                 print("summoner error", ex)
         for puuid in tqdm(puuids):
