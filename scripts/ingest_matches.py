@@ -33,7 +33,7 @@ def safe_fetch(fn, *args, retries=5, wait=1, **kwargs):
             time.sleep(wait * (i+1))
     raise RuntimeError("Max retries exceeded")
 
-def main(max_per_summoner=200):
+def main(max_per_summoner=20):
     seen_matches = set()
     for region_key, region_cfg in REGIONS.items():
         platform = region_cfg["platform"]
