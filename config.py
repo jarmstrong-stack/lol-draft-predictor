@@ -21,7 +21,7 @@ REGIONS = {
     "euw": {"platform": "euw1", "match_routing": "EUROPE"},
     "kr": {"platform": "kr", "match_routing": "ASIA"},
 }
-TARGET_PATCH = "25.20"  # change to the Worlds patch string format you need
+TARGET_PATCH = "15.20"  # change to the Worlds patch string format you need
 DATA_DIR = "data"
 RAW_DIR = f"{DATA_DIR}/raw"
 PROCESSED_DIR = f"{DATA_DIR}/processed"
